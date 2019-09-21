@@ -3,9 +3,11 @@ import Animations
 import math
 import time
 import threading
+from Utils import *
 
+led_c = 4*2*4
 
-dev = Device(led_count=21, servo_count=3, brightness=0.2, update_rate=50)
+dev = Device(led_count=led_c, servo_count=3, brightness=0.8, update_rate=50)
 dev.connect()
 dev.start()
 
@@ -21,7 +23,7 @@ sin1 = Animations.Sin_n_i_1(speed=120/anim_rate)
 rgb_v1 = Animations.RGB_sin_v1_full_led(dev, speed=120/anim_rate)
 
 anim_now = "none"
-
+sin_arr = Animations.Sin_arr_i_1(led_c, speed=1/anim_rate, k=5)
 
 def anim():
     while True:
@@ -31,6 +33,9 @@ def anim():
         elif anim_now == "rg":
             l1_v = l1.tick()
             dev.set_color_all(((l1_v)*255, (1-l1_v)*255, 0))
+        elif anim_now == "sin":
+            sin_arr_v = sin_arr.tick()
+            dev.leds = [check_color((i*255, 0, 0)) for i in sin_arr_v]
         elif anim_now == "none":
             dev.set_color_all((0, 0, 0))
         time.sleep(1/anim_rate)
@@ -46,7 +51,7 @@ anim_now = "none"
 
 while True:
     time.sleep(5)
-    anim_now = "rg"
+    anim_now = "sin"
     time.sleep(5)
     anim_now = "rgb_v1"
 

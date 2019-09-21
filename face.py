@@ -13,7 +13,7 @@ import glob
 import numpy as np
 
 
-dev = Device(led_count=21, servo_count=3, brightness=0.8, update_rate=50)
+dev = Device(led_count=4*4*2, servo_count=3, brightness=1, update_rate=30)
 dev.connect()
 dev.start()
 
@@ -25,7 +25,7 @@ l1 = Animations.Linear2_i_1(speed=15/anim_rate)
 l2 = Animations.Linear_i_1(speed=50/anim_rate)
 
 sin1 = Animations.Sin_n_i_1(speed=120/anim_rate)
-sin_arr = Animations.Sin_arr_i_1(21, speed=5/anim_rate, k=5)
+sin_arr = Animations.Sin_arr_i_1(4*4*2, speed=5/anim_rate, k=5)
 
 rgb_v1 = Animations.RGB_sin_v1_full_led(dev, speed=160/anim_rate)
 
@@ -40,12 +40,26 @@ def anim():
         elif anim_now == "rg":
             l1_v = l1.tick()
             dev.set_color_all(((l1_v)*255, (1-l1_v)*255, 0))
+        elif anim_now == "geor":
+            l1_v = l1.tick()
+            dev.set_color_all((255*0.7, 0, 255*0.3))
+        elif anim_now == "rb":
+            l1_v = l1.tick()
+            dev.set_color_all(((l1_v)*255, 0, (1-l1_v)*255))
         elif anim_now == "none":
             dev.set_color_all((0, 0, 0))
-        elif anim_now == "sin":
+        elif anim_now == "sin_r":
             sin_arr_v = sin_arr.tick()
             # print(sin_arr_v)
             dev.leds = [check_color((i*255, 0, 0)) for i in sin_arr_v]
+        elif anim_now == "sin_g":
+            sin_arr_v = sin_arr.tick()
+            # print(sin_arr_v)
+            dev.leds = [check_color((0, 255*i, 0)) for i in sin_arr_v]
+        elif anim_now == "sin_b":
+            sin_arr_v = sin_arr.tick()
+            # print(sin_arr_v)
+            dev.leds = [check_color((0, 255*i*0.2, 255*i*0.8)) for i in sin_arr_v]
         time.sleep(1/anim_rate)
 
 
@@ -76,6 +90,7 @@ def face_box_to_xyxy(b):
     return ((x1, y1), (x2, y2))
 
 
+
 encodings = []
 ids_enc = []
 for p_file in sorted(glob.glob('./faces' + '/*.pickle')):
@@ -86,14 +101,26 @@ for p_file in sorted(glob.glob('./faces' + '/*.pickle')):
 
 faceCascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
 
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
 i = 0
 resize_k = 0.7
 ################################################################
 
-ln_count = 12
+ln_count = 28
 last_names = [[] for i in range(ln_count)]
+
+def get_last_name(name_to_find):
+    d_c = 0
+    for fn in last_names:
+        for name in fn:
+            if name == name_to_find:
+                d_c += 1
+    print(d_c)
+    if (d_c / ln_count) > 0.6:
+        return True
+    else:
+        return False
 
 while True:
     ret, frame = cap.read()
@@ -143,10 +170,22 @@ while True:
                 if name != "-1":
                     d_c += 1
         print(d_c)
-        if (d_c / ln_count) > 0.6:
-            anim_now = "sin"
-        else:
+        if get_last_name("george"):
+            anim_now = "geor"
+        elif get_last_name("vas59"):
+            anim_now = "sin_g"
+        elif get_last_name("m"):
+            anim_now = "sin_b"
+        elif get_last_name("-1"):
+            anim_now = "rb"
+        elif (d_c / ln_count) > 0.6:
             anim_now = "rg"
+        else:
+            anim_now = "rgb_v1"
+        # if (d_c / ln_count) > 0.6:
+        #     anim_now = "sin_r"
+        # else:
+        #     anim_now = "rgb_v1"
 
         for fb, name, i in zip(face_locations, face_names, range(len(face_names))):
             box = face_box_to_xyxy(fb)

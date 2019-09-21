@@ -8,7 +8,7 @@ import pickle
 
 faceCascade = cv2.CascadeClassifier('./haarcascade_frontalface_default.xml')
 
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
 # ret = True
 resize_k = 0.9
